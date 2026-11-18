@@ -1,0 +1,6 @@
+{
+  "name": "Tareas Nube",
+  "description": "App de gestión de tareas con integración en la nube y sincronización en tiempo real para múltiples dispositivos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

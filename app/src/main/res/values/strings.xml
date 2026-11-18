@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Tareas Nube</string>
+    <string name="auth_headline">Tus tareas, siempre contigo en tiempo real</string>
+    <string name="auth_subtitle">Organiza tus proyectos, fija prioridades y mantén cada dispositivo sincronizado al instante en la nube.</string>
+    <string name="auth_sign_in_google">Continuar con Google</string>
+    <string name="auth_feature_realtime">Sincronización instantánea multi-dispositivo</string>
+    <string name="auth_feature_offline">Edición sin conexión con subida automática</string>
+    <string name="auth_feature_security">Aislamiento privado vinculado a tu cuenta</string>
+    <string name="nav_tasks">Tareas</string>
+    <string name="nav_lists">Listas</string>
+    <string name="nav_cloud">Nube</string>
+    <string name="sync_status_synced">En la nube</string>
+    <string name="sync_status_syncing">Sincronizando…</string>
+    <string name="sync_status_offline">Caché local</string>
+    <string name="action_new_task">Nueva tarea</string>
+    <string name="action_new_list">Nueva lista</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_sign_out">Cerrar sesión</string>
+    <string name="action_retry">Reintentar</string>
+    <string name="empty_tasks_title">Todo despejado</string>
+    <string name="empty_tasks_subtitle">Crea una tarea con el botón + y se sincronizará al instante en todos tus dispositivos.</string>
+    <string name="empty_lists_title">Sin listas personalizadas</string>
+    <string name="empty_lists_subtitle">Agrupa tus tareas por proyecto, equipo o área personal para encontrarlas rápido.</string>
+    <string name="error_generic_sync">Error al sincronizar con la nube</string>
+    <string name="cd_auth_hero">Ilustración de tareas sincronizadas en la nube</string>
+    <string name="cd_empty_tasks">Ilustración de bandeja de tareas vacía</string>
+    <string name="cd_toggle_task">Marcar o desmarcar tarea</string>
+    <string name="cd_delete_task">Eliminar tarea</string>
+    <string name="cd_search_tasks">Buscar tareas</string>
+    <string name="cd_clear_search">Limpiar búsqueda</string>
+    <string name="cd_user_avatar">Avatar del usuario</string>
+</resources>

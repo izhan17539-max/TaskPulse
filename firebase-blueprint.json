@@ -1,0 +1,104 @@
+{
+  "entities": {
+    "TaskList": {
+      "title": "TaskList",
+      "description": "Lista personalizada de tareas sincronizada en la nube para organizar actividades por proyecto o contexto.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID del usuario propietario autenticado con Google."
+        },
+        "name": {
+          "type": "string",
+          "description": "Nombre de la lista (1 a 50 caracteres)."
+        },
+        "colorHex": {
+          "type": "string",
+          "description": "Color hexadecimal #RRGGBB de la lista."
+        },
+        "iconKey": {
+          "type": "string",
+          "enum": ["work", "home", "shopping", "star", "bolt", "folder"],
+          "description": "Identificador de icono de la lista."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Marca de tiempo de creación asignada por el servidor (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Última marca de tiempo de actualización asignada por el servidor (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["userId", "name", "colorHex", "iconKey", "createdAt", "updatedAt"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Tarea individual con prioridad, categoría, fecha límite opcional y sincronización multi-dispositivo en tiempo real.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID del usuario propietario autenticado con Google."
+        },
+        "title": {
+          "type": "string",
+          "description": "Título de la tarea (1 a 120 caracteres)."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Notas adicionales opcionales (hasta 1000 caracteres)."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Estado de finalización de la tarea."
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["HIGH", "MEDIUM", "LOW"],
+          "description": "Nivel de prioridad de la tarea."
+        },
+        "listId": {
+          "type": "string",
+          "description": "Identificador opcional de la lista personalizada asociada."
+        },
+        "categoryLabel": {
+          "type": "string",
+          "description": "Etiqueta visible de categoría o lista (1 a 50 caracteres)."
+        },
+        "dueDateMillis": {
+          "type": "integer",
+          "description": "Fecha límite opcional en milisegundos desde epoch."
+        },
+        "deviceName": {
+          "type": "string",
+          "description": "Nombre del dispositivo desde el cual se creó o modificó por última vez."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Marca de tiempo de creación asignada por el servidor (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Última marca de tiempo de actualización asignada por el servidor (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["userId", "title", "completed", "priority", "categoryLabel", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/lists/{listId}": {
+      "schema": { "$ref": "#/entities/TaskList" },
+      "description": "Subcolección privada de listas personalizadas por usuario."
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/Task" },
+      "description": "Subcolección privada de tareas sincronizadas en tiempo real por usuario."
+    }
+  }
+}

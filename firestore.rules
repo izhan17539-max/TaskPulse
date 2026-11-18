@@ -1,0 +1,145 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Hardened Primitives ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- TaskList Validation Helpers ---
+    function isValidTaskList(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.userId.size() >= 1 &&
+             data.userId.size() <= 128 &&
+             data.name is string &&
+             data.name.size() >= 1 &&
+             data.name.size() <= 50 &&
+             data.colorHex is string &&
+             data.colorHex.size() == 7 &&
+             data.colorHex.matches('^#[0-9A-Fa-f]{6}$') &&
+             data.iconKey is string &&
+             data.iconKey.size() >= 1 &&
+             data.iconKey.size() <= 20 &&
+             data.iconKey in ['work', 'home', 'shopping', 'star', 'bolt', 'folder'] &&
+             data.createdAt is timestamp &&
+             data.createdAt <= request.time &&
+             data.updatedAt is timestamp &&
+             data.updatedAt <= request.time;
+    }
+
+    function isValidTaskListCreate(data, userId) {
+      return data.keys().hasAll(['userId', 'name', 'colorHex', 'iconKey', 'createdAt', 'updatedAt']) &&
+             data.keys().hasOnly(['userId', 'name', 'colorHex', 'iconKey', 'createdAt', 'updatedAt']) &&
+             isValidTaskList(data, userId);
+    }
+
+    // --- Task Validation Helpers ---
+    function isValidTask(data, userId) {
+      return data.userId is string &&
+             data.userId == userId &&
+             data.userId.size() >= 1 &&
+             data.userId.size() <= 128 &&
+             data.title is string &&
+             data.title.size() >= 1 &&
+             data.title.size() <= 120 &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+             data.completed is bool &&
+             data.priority is string &&
+             data.priority.size() >= 3 &&
+             data.priority.size() <= 10 &&
+             data.priority in ['HIGH', 'MEDIUM', 'LOW'] &&
+             (!('listId' in data) || isValidId(data.listId)) &&
+             data.categoryLabel is string &&
+             data.categoryLabel.size() >= 1 &&
+             data.categoryLabel.size() <= 50 &&
+             (!('dueDateMillis' in data) || (data.dueDateMillis is int && data.dueDateMillis >= 0 && data.dueDateMillis <= 4102444800000)) &&
+             (!('deviceName' in data) || (data.deviceName is string && data.deviceName.size() >= 1 && data.deviceName.size() <= 80)) &&
+             data.createdAt is timestamp &&
+             data.createdAt <= request.time &&
+             data.updatedAt is timestamp &&
+             data.updatedAt <= request.time;
+    }
+
+    function isValidTaskCreate(data, userId) {
+      return data.keys().hasAll(['userId', 'title', 'completed', 'priority', 'categoryLabel', 'createdAt', 'updatedAt']) &&
+             data.keys().hasOnly([
+               'userId', 'title', 'notes', 'completed', 'priority',
+               'listId', 'categoryLabel', 'dueDateMillis', 'deviceName',
+               'createdAt', 'updatedAt'
+             ]) &&
+             isValidTask(data, userId) &&
+             (!('listId' in data) || exists(/databases/$(database)/documents/users/$(userId)/lists/$(data.listId)));
+    }
+
+    function isTaskToggleAction() {
+      return incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'deviceName', 'updatedAt']);
+    }
+
+    function isTaskEditAction() {
+      return incoming().diff(existing()).affectedKeys().hasOnly([
+        'title', 'notes', 'completed', 'priority',
+        'listId', 'categoryLabel', 'dueDateMillis', 'deviceName', 'updatedAt'
+      ]);
+    }
+
+    // --- User-Scoped Subcollections ---
+    match /users/{userId}/lists/{listId} {
+      allow get: if isOwner(userId) && isValidId(listId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(listId) &&
+                       isValidTaskListCreate(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(listId) &&
+                       isValidTaskList(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['name', 'colorHex', 'iconKey', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(listId);
+    }
+
+    match /users/{userId}/tasks/{taskId} {
+      allow get: if isOwner(userId) && isValidId(taskId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(taskId) &&
+                       isValidTaskCreate(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(taskId) &&
+                       isValidTask(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       (
+                         (isTaskToggleAction() && incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'deviceName', 'updatedAt'])) ||
+                         (isTaskEditAction() && incoming().diff(existing()).affectedKeys().hasOnly([
+                           'title', 'notes', 'completed', 'priority',
+                           'listId', 'categoryLabel', 'dueDateMillis', 'deviceName', 'updatedAt'
+                         ]))
+                       );
+      allow delete: if isOwner(userId) && isValidId(taskId);
+    }
+  }
+}
